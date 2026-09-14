@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Routine Went First. Judgment Is Next.</title>
+<meta name="description" content="BLS occupation data 2022–2025 tested against a Delegation Resistance model and Tyler Cowen's two-factor model of AI-aided growth. Routine, non-embedded knowledge work shrank; everything else grew.">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #fafaf9;
+    --text: #1c1917;
+    --text-secondary: #57534e;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --border: #e7e5e4;
+    --card-bg: #ffffff;
+    --ae-color: #ef4444;
+    --adz-color: #f59e0b;
+    --vs-color: #3b82f6;
+    --dp-color: #22c55e;
+    --pass-color: #16a34a;
+    --fail-color: #dc2626;
+    --marginal-color: #d97706;
+    --max-width: 720px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Merriweather', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+    font-size: 18px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .hero {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: white;
+    padding: 80px 24px 60px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    max-width: 800px;
+    margin: 0 auto 16px;
+  }
+
+  .hero .subtitle {
+    font-size: 1.1rem;
+    color: #94a3b8;
+    max-width: 600px;
+    margin: 0 auto 24px;
+    font-style: italic;
+  }
+
+  .hero .meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+
+  article {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  article p {
+    margin-bottom: 1.5em;
+  }
+
+  h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 2.5em 0 0.8em;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 2em 0 0.6em;
+    color: var(--text);
+  }
+
+  .lead {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    line-height: 1.9;
+  }
+
+  blockquote {
+    border-left: 4px solid var(--accent);
+    padding: 16px 24px;
+    margin: 2em 0;
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #1e40af;
+  }
+
+  .chart-container {
+    max-width: 860px;
+    margin: 2em auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .chart-container .chart-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .chart-container .chart-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 16px;
+    margin: 2em 0;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 180px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-card .stat-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .scorecard {
+    max-width: 860px;
+    margin: 2em auto;
+    overflow-x: auto;
+  }
+
+  .scorecard table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+
+  .scorecard th {
+    background: #f1f5f9;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .scorecard td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .scorecard tr:hover { background: #f8fafc; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge.pass { background: #dcfce7; color: var(--pass-color); }
+  .badge.fail { background: #fef2f2; color: var(--fail-color); }
+  .badge.marginal { background: #fef9c3; color: var(--marginal-color); }
+
+  .callout {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 2em 0;
+    font-size: 0.95rem;
+  }
+
+  .callout strong { color: #92400e; }
+
+  .section-divider {
+    text-align: center;
+    margin: 3em 0;
+    color: #cbd5e1;
+    font-size: 1.5rem;
+    letter-spacing: 8px;
+  }
+
+  .footnote {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    margin-top: 3em;
+    padding-top: 2em;
+  }
+
+  .footnote h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5em;
+  }
+
+  .footnote a { color: var(--accent); }
+
+  a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+
+  .framework-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    max-width: 600px;
+    margin: 1.5em auto;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .framework-cell {
+    padding: 16px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .framework-cell.ae { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .framework-cell.adz { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+  .framework-cell.vs { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  .framework-cell.dp { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+  .framework-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  @media (max-width: 640px) {
+    article { padding: 32px 16px; }
+    .stat-row { flex-direction: column; }
+    .framework-grid { grid-template-columns: 1fr; }
+  }
+
+  .anchor-search {
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .anchor-search input {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border: 1px solid #d6d3d1;
+    border-radius: 8px;
+    width: 320px;
+    outline: none;
+  }
+
+  .anchor-search input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px #dbeafe;
+  }
+
+  .anchor-search .hint {
+    font-size: 0.8rem;
+    color: #a8a29e;
+  }
+
+  .tier-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+  }
+
+  .tier-legend .tier {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tier-legend .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  .cell-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    gap: 10px;
+    max-width: 640px;
+    margin: 1.5em auto;
+    font-family: 'Inter', sans-serif;
+    align-items: stretch;
+  }
+  .cell-grid .hdr { font-size: 0.8rem; color: var(--text-secondary); text-align: center; align-self: end; padding-bottom: 4px; }
+  .cell-grid .rowlab { font-size: 0.8rem; color: var(--text-secondary); text-align: right; align-self: center; padding-right: 6px; }
+  .cell-grid .cell { padding: 18px 14px; border-radius: 10px; text-align: center; line-height: 1.35; }
+  .cell-grid .cell .v { font-size: 1.5rem; font-weight: 700; }
+  .cell-grid .cell .s { font-size: 0.8rem; opacity: 0.85; }
+  .cell-grid .lose { background: #fef2f2; color: #991b1b; border: 2px solid #fca5a5; }
+  .cell-grid .gain { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  .badge { white-space: nowrap; }
+  .map-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; font-family: 'Inter', sans-serif; font-size: 0.78rem; }
+  .map-legend .tier { display: flex; align-items: center; gap: 5px; }
+  .map-legend .swatch { width: 12px; height: 12px; border-radius: 50%; }
+  ul.factors { margin: 1em 0 1.5em 1.4em; }
+  ul.factors li { margin-bottom: 0.6em; }
+  .prev-post { font-family: 'Inter', sans-serif; font-size: 0.85rem; background: var(--accent-light); color: #1e40af; padding: 10px 16px; border-radius: 8px; margin-bottom: 2em; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Routine Went First. Judgment Is Next.</h1>
+  <p class="subtitle">The BLS occupation data I promised in March is out. Fifteen million routine, non-embedded jobs shrank while every other kind of knowledge work grew. Now the leading indicators are pointing up the ladder.</p>
+  <p class="meta">Ben &middot; September 2026 &middot; 11 min read</p>
+</div>
+
+<article>
+
+<div class="prev-post">Follow-up to <a href="index.html">Covid Was the Rehearsal. AI Is the Show.</a> (March 2026)</div>
+
+<p class="lead">
+In March I published a model of AI worker displacement built on a single idea: AI is offshoring on steroids, so the jobs that go are the ones where the work can be packaged up and handed to something that isn't in the room. I called the resistance to that Delegation Resistance, scored 894 occupations on it, and showed it predicted which sectors were losing job postings.
+</p>
+
+<p>
+I also wrote this: <em>"The real test comes when BLS releases occupation-level employment counts for 2025."</em>
+</p>
+
+<p>
+That data landed in May. And last week Tyler Cowen posted <a href="https://marginalrevolution.com/marginalrevolution/2026/09/a-simple-model-of-ai-aided-economic-growth.html" target="_blank">a simple two-factor model of AI-aided growth</a> that makes a different prediction about who loses. So I did what I should: I wrote down both models' predictions, then pulled the employment data for every teleworkable occupation in the country, 2022 through 2025, and scored them.
+</p>
+
+<p>
+The short version: my model got the protective side right and the displaced side wrong. Cowen's model got the protective side right and the displaced side wrong in the <em>other</em> direction. The data point at something neither model wrote down. And software developers, whom my March post flagged as high-risk, grew 10%.
+</p>
+
+<div class="chart-container">
+  <div class="chart-title">Where Did the Losses Land?</div>
+  <div class="chart-subtitle">218 knowledge-work occupations by how routine the work is and how embedded it is in a place or institution. Red shrank between May 2022 and May 2025; blue grew. Bubble size = 2022 employment. Search to find yours.</div>
+  <div class="anchor-search">
+    <input type="text" id="map-search" placeholder="Search for an occupation..." autocomplete="off">
+    <span class="hint">Try: secretary, software, accountant, manager, nurse</span>
+  </div>
+  <div class="map-legend">
+    <div class="tier"><div class="swatch" style="background:#dc2626"></div> Shrank 2022–25</div>
+    <div class="tier"><div class="swatch" style="background:#2563eb"></div> Grew 2022–25</div>
+    <div class="tier"><div class="swatch" style="background:#fee2e2;border:1px solid #fca5a5"></div> The cell that lost ground</div>
+  </div>
+  <div id="chart-map"></div>
+</div>
+
+<p>
+The rest of this post explains that chart. If you came for the correction about software developers, it's in the next section.
+</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>What I Got Wrong in March</h2>
+
+<p>Three things, in decreasing order of embarrassment.</p>
+
+<p>
+<strong>Software developers.</strong> Delegation Resistance scored them as highly exposed: screen-based, structured inputs, verifiable outputs. Between May 2022 and May 2025, software developer employment rose 10%, from 1.53 million to 1.69 million. Computer programmers, a separate occupation that means "writes code to spec," fell 30%. QA testers fell 5%. Web developers fell 21%. My metric put all four in the same bucket because it scores how easily work can be handed off, and all four hand off equally well. What separated them was something DR didn't measure: whether the job is deciding what to build or executing what was decided.
+</p>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="stat-value">+10%</div>
+    <div class="stat-label">Software developers<br>(1.53M → 1.69M)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--fail-color)">−30%</div>
+    <div class="stat-label">Computer programmers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--fail-color)">−21%</div>
+    <div class="stat-label">Web developers</div>
+  </div>
+</div>
+
+<p>
+<strong>The anchorless list.</strong> I identified 29 occupations with no task that anchors them to a human and implied they were the most exposed. Some were: data entry keyers −19%, billing clerks −9%, web developers −21%. But market research analysts, the largest occupation on that list, grew 13%. Economists grew 9%, physicists 8%. Having no physical anchor turned out to be necessary for displacement but nowhere near sufficient.
+</p>
+
+<p>
+<strong>The mechanism.</strong> My model's central claim was that AI would first hit jobs that couldn't be offshored because they needed real-time interaction: customer-facing, high-contact, communication-bound work. Once I built the proper communication-friction index from O*NET and ran it against employment change, it had no effect. Zero, in every specification. High-contact occupations (managers, sales managers, HR) grew. What I had called communication friction correlates 0.47 with something else, and that something else protects rather than exposes.
+</p>
+
+<p>
+I don't want to bury that. The idea that made the March post interesting, "AI as offshoring on steroids," predicted the wrong first casualties.
+</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>Cowen's Model</h2>
+
+<p>
+Cowen's post proposes two factors. Intelligence is formal reasoning, and AI is about to flood the supply of it. Polanyi knowledge is everything tacit and situated: how this office works, what this client wants, when to make the call. The two are complements, so when Intelligence gets cheap, Polanyi knowledge becomes the scarce input and its price rises.
+</p>
+
+<p>
+That's an aggregate model, but it has an occupation-level implication if you treat each job as a bundle of the two factors: high-Intelligence, low-Polanyi occupations lose; high-Polanyi occupations gain. I built both scores from O*NET items I hadn't used in March,<sup><a href="#fn-scores" id="fnref-scores">†</a></sup> so the two models would draw on different data, and wrote the predictions down before looking at outcomes.
+</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>The Data</h2>
+
+<p>
+BLS Occupational Employment and Wage Statistics, May 2022 through May 2025, for every occupation that Dingel and Neiman classify as teleworkable, plus computer occupations, with at least 10,000 workers. That's 218 occupations and 49 million people. The baseline is +5.1% employment for all occupations over the same three years.
+</p>
+
+<p>
+Two indices from my March model (communication friction, verification friction), two from Cowen's (Intelligence, Polanyi), plus the AI Occupational Exposure index that most of the "AI and jobs" literature uses.<sup><a href="#fn-data" id="fnref-data">‡</a></sup>
+</p>
+
+<h2>What Predicted Nothing</h2>
+
+<p>Start with the null result, because it's the one I'm most confident in.</p>
+
+<p>
+<strong>AI exposure, as measured by AIOE, does not predict which occupations shrank.</strong> Not alone, not with controls, not within the office-and-administrative group where every occupation is highly exposed. The coefficient is indistinguishable from zero in every specification I ran. The most-exposed third of occupations did <em>better</em> than the middle third. This is the central finding of my March model, that exposure is not displacement, and it now stands on employment data rather than postings.
+</p>
+
+<p>
+<strong>My quadrants didn't predict either.</strong> Sorting occupations by communication friction and verification friction gives four groups. The one I said would be hit first grew 3.3%. The one I said was already hollowed out by offshoring shrank 0.5%. The one high on both frictions grew 8.6%. The protected corner is real. The exposed corner isn't where I put it.
+</p>
+
+<p>
+<strong>Cowen's Intelligence factor has the wrong sign.</strong> High-Intelligence occupations grew: management analysts +11%, financial managers +14%, civil engineers +20%, data scientists +64%. The Intelligence score has a positive coefficient in every regression. If AI were flooding the supply of reasoning and displacing the people who supply it, this is not what the first three years would look like.
+</p>
+
+<div class="scorecard">
+<table>
+  <thead><tr><th>Predictor</th><th>Model</th><th>Coefficient on 2022–25 employment change</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>AI exposure (AIOE)</td><td>Literature standard</td><td>+2.6 (SE 2.7)</td><td><span class="badge fail">No effect</span></td></tr>
+    <tr><td>Communication friction</td><td>Mine (March)</td><td>−0.03 (SE 0.97)</td><td><span class="badge fail">No effect</span></td></tr>
+    <tr><td>Verification friction</td><td>Mine (March)</td><td>+2.9 (SE 1.3)</td><td><span class="badge marginal">Weakly protective</span></td></tr>
+    <tr><td>Intelligence</td><td>Cowen</td><td>+4.2 (SE 1.6)</td><td><span class="badge fail">Wrong sign</span></td></tr>
+    <tr><td>Polanyi</td><td>Cowen</td><td>+1.5 (SE 1.2)</td><td><span class="badge marginal">Right sign, weak</span></td></tr>
+    <tr><td>Routine</td><td>Neither (added post hoc)</td><td>−3.8 (SE 1.0)</td><td><span class="badge pass">Predicts</span></td></tr>
+  </tbody>
+</table>
+</div>
+<p class="framework-label">Employment-weighted regressions across 218 occupations; each index standardized. Full table in the <a href="https://github.com/jbgh2/ai-worker-displacement/tree/main/followup/results" target="_blank">repo</a>.</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>What Did Predict: Routine × Embedded</h2>
+
+<p>
+The occupations that shrank share two things. They're routine, and they're not embedded in a place, an institution, or a relationship.
+</p>
+
+<p>
+I measured routineness with three O*NET items: importance of repeating the same tasks, freedom to make decisions (reversed), and freedom to set your own priorities (reversed).<sup><a href="#fn-routine" id="fnref-routine">§</a></sup> Embeddedness is Cowen's Polanyi score: on-site training required, social perceptiveness, negotiation, relationship-building, physical proximity.
+</p>
+
+<p>Split both at the median and you get four cells:</p>
+
+<div class="cell-grid">
+  <div></div>
+  <div class="hdr">Not embedded (low Polanyi)</div>
+  <div class="hdr">Embedded (high Polanyi)</div>
+  <div class="rowlab">Routine</div>
+  <div class="cell lose"><div class="v">−2.6%</div><div class="s">15.3M workers · 64 occupations</div></div>
+  <div class="cell gain"><div class="v">+8.4%</div><div class="s">6.8M · 45 occupations</div></div>
+  <div class="rowlab">Non-routine</div>
+  <div class="cell gain"><div class="v">+5.7%</div><div class="s">5.7M · 45 occupations</div></div>
+  <div class="cell gain"><div class="v">+6.6%</div><div class="s">21.3M · 64 occupations</div></div>
+</div>
+<p class="framework-label">Employment change, May 2022 → May 2025, weighted by 2022 employment. All occupations: +5.1%.</p>
+
+<p>
+One cell shrank. Every other cell grew 6–8%, faster than the economy. The routine-and-not-embedded cell holds customer service reps (−284,000 jobs), bookkeepers (−177,000), secretaries (−120,000), office clerks, collectors, order clerks, data entry keyers, programmers, credit analysts. Fifteen million people, and the only group of knowledge workers that lost ground.
+</p>
+
+<p>
+Neither factor does this alone. Routine work that <em>is</em> embedded grew 8.4%. The cleanest pair in the whole dataset: secretaries and administrative assistants, −6.6%. Medical secretaries, +40.9%. Same task list, same O*NET skill profile, opposite outcome, because one of them sits next to patients and clinicians and the other doesn't.
+</p>
+
+<div class="chart-container">
+  <div class="chart-title">The Same Four Cells, Year by Year</div>
+  <div class="chart-subtitle">Employment index, May 2022 = 100, weighted by 2022 employment. Routine-not-embedded declines steadily; the other three grew fast and then stalled in 2025.</div>
+  <div id="chart-cells"></div>
+</div>
+
+<p>
+In a regression with all three factors, routineness alone carries the full-period result. But in 2024→25 specifically, the interaction term (routine × embedded) is the most statistically significant thing in the data, larger than in either earlier year. That's the closest thing to an AI-era signature I found: the routine cell was already declining before ChatGPT, and the gap between routine-not-embedded and everything else widened in the most recent year rather than closing.<sup><a href="#fn-caveats" id="fnref-caveats">¶</a></sup>
+</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>Reading Both Models Against This</h2>
+
+<p>
+Cowen's mechanism survives. A scarce complement gains when its partner floods in. But the factor that flooded wasn't Intelligence in the reasoning-and-judgment sense; it was routine information processing, which his model folds into Intelligence and can't see separately. His model can't distinguish a credit analyst from a bill collector, and they went opposite ways.
+</p>
+
+<p>
+My mechanism partly survives. Verification friction was weakly protective, and it turns out to have been a proxy for non-routineness. Communication friction was a proxy for Polanyi embedding, mislabeled as exposure when it's protection. The offshoring analogy pointed at the wrong first casualties because offshoring was constrained by communication and AI isn't.
+</p>
+
+<p>
+What both models missed is that the seam runs <em>inside</em> task categories, not between them. "Secretary" is not a unit. The O*NET Polanyi scores for medical secretaries and other secretaries are nearly identical; the sector did the protecting. Any model that scores occupations without scoring where they sit will get medical secretaries wrong, and both of ours did.
+</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>Is the Intelligence Wave Next?</h2>
+
+<p>
+Cowen would say the reasoning-heavy occupations are simply later in the queue. There's some early support for that, and it comes from the same Indeed postings data I used in March.
+</p>
+
+<p>
+Postings for routine categories have stopped falling. Customer service is flat since January 2025; administrative assistance tracks the aggregate. Both sit well below pre-pandemic, which is consistent with the employment data: the routine wave happened in 2022–24 and is now at trend.
+</p>
+
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--fail-color)">−27%</div>
+    <div class="stat-label">Accounting postings<br>since Jan 2025</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">+3.4%</div>
+    <div class="stat-label">Accountant employment<br>2022–25</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">+10%</div>
+    <div class="stat-label">Software dev postings<br>since Jan 2025</div>
+  </div>
+</div>
+
+<p>
+Accounting postings are down 27% since January 2025, the largest decline of any Indeed category. Accountants grew 3.4% in the employment data through May 2025. So the hiring margin in a high-Intelligence, high-verification occupation is turning before the headcount does. That's the profile Cowen's model predicts.
+</p>
+
+<p>
+Against that: software development postings are <em>up</em> 10% since January, and every engineering category rose. Legal and math track the aggregate. One category is not a wave.
+</p>
+
+<p>
+The employment data show something similar at the top. The non-routine, embedded cell, which grew 4.2% in 2022→23, grew 2.3% in 2023→24 and −0.2% in 2024→25. Management occupations went from +6.4% a year to +1.0%. That's not displacement of incumbents. It reads as a hiring stall, and industry reports on insurance adjusters (junior postings down ~50%, senior roles holding) suggest it's concentrated at the entry level. Neither model has a hiring-margin mechanism. Both should.
+</p>
+
+<div class="section-divider">• • •</div>
+
+<h2>What I'd Bet On</h2>
+
+<p>If I had to state the model now, it has three factors, not two:</p>
+
+<ul class="factors">
+  <li><strong>Routine cognitive work.</strong> What AI substitutes. Steadily, since before ChatGPT, accelerating since.</li>
+  <li><strong>Reasoning and judgment.</strong> What AI has so far complemented. Possibly next; accounting postings are the first hint.</li>
+  <li><strong>Polanyi embedding.</strong> What AI can't reach. Protective on its own and, more importantly, protective of routine work that happens inside it.</li>
+</ul>
+
+<p>
+And one interaction: routine work is displaced only where it isn't embedded. That's Cowen's complementarity claim, but between routine and Polanyi rather than Intelligence and Polanyi.
+</p>
+
+<div class="callout">
+<strong>The next data point</strong> is May 2026 OEWS, out next spring. If the routine × embedded interaction weakens, 2025 was noise. If high-Intelligence occupations turn negative, Cowen was right about the sequence even though routine went first. If accounting employment follows accounting postings, both.
+</div>
+
+<div class="section-divider">• • •</div>
+
+<h2>Data and Code</h2>
+
+<p>
+The 218-occupation panel with all indices, the scripts that build it, and checkpoint tests are in the <a href="https://github.com/jbgh2/ai-worker-displacement/tree/main/followup" target="_blank">followup directory</a> of the repo. Occupation employment: <a href="https://www.bls.gov/oes/tables.htm" target="_blank">BLS OEWS</a>, May 2022–2025. Occupation attributes: <a href="https://www.onetcenter.org/database.html" target="_blank">O*NET 30.0</a>. Teleworkability: <a href="https://github.com/jdingel/DingelNeiman-workathome" target="_blank">Dingel and Neiman (2020)</a>. AI exposure: AIOE, Felten, Raj and Seamans (2021). Job postings: <a href="https://hiringlab.indeed.com/data/" target="_blank">Indeed Hiring Lab</a> via FRED, through September 4, 2026.
+</p>
+
+<div class="footnote">
+  <h3>Methodology Notes</h3>
+  <p id="fn-scores">
+    <sup><a href="#fnref-scores">†</a></sup> <strong>Cowen's factors.</strong> Intelligence: O*NET Abilities importance for deductive reasoning, inductive reasoning, mathematical reasoning, information ordering, written comprehension, written expression, plus Work Activities analyzing and processing information. Polanyi: required on-site and on-the-job training (Education/Training file), social perceptiveness, coordination, persuasion, negotiation (Skills), establishing relationships, resolving conflicts, guiding subordinates (Work Activities), physical proximity (Work Context). Each item z-scored across the sample, then averaged. No overlap with the March DR items or the friction indices.
+  </p>
+  <p id="fn-data">
+    <sup><a href="#fnref-data">‡</a></sup> <strong>Data assembly.</strong> BLS blocks bulk downloads from scripts, so 2022–2024 OEWS came from a GitHub mirror, validated against the BLS API for 2025 (25 occupations) and an independent copy of the 2022 table (653 occupations), zero mismatches. The analysis was developed with Claude in a single session, with predictions written to a log before each data pull, then re-implemented as the scripts in the repo; the scripts' numbers are the ones here. Sample: Dingel-Neiman teleworkable = 1, plus all SOC 15 computer occupations (Dingel-Neiman uses 2010 codes there), 2022 employment ≥ 10,000. Accountants are not classified teleworkable and sit outside the 218; their +3.4% comes from the BLS API directly.
+  </p>
+  <p id="fn-routine">
+    <sup><a href="#fnref-routine">§</a></sup> <strong>A confession about the routine index.</strong> I did not have it written down before the first regressions. I built it after seeing that the losers spanned all four of my quadrants and shared low scores on both Intelligence and Polanyi, and I logged its definition before running it. That makes it a specification search, not a pre-registered test. Two things make me less worried than I should be: the items are standard Autor-Levy-Murnane routine-task proxies, and the late-period result is driven by the interaction with Polanyi, which <em>was</em> pre-specified. But you should discount accordingly.
+  </p>
+  <p id="fn-caveats">
+    <sup><a href="#fnref-caveats">¶</a></sup> <strong>Three caveats that constrain everything above.</strong> OEWS pools three years of survey panels, so each annual estimate is smoothed toward earlier years; BLS says not to use it as a time series, and I did anyway, again. Accelerations are understated as a result. Second, I have no 2019 baseline yet; bookkeepers and data entry keyers were declining before 2022 from ordinary software, and a difference-in-differences against 2019→2022 is needed before attributing the routine decline to AI rather than to a trend it joined. Third, the rate cycle confounds loan officers, loan interviewers and credit clerks; excluding them doesn't change the four-cell result. The medical-secretaries comparison is also entangled with health care demand, which grew regardless of AI.
+  </p>
+</div>
+
+</article>
+
+<script>
+(function() {
+  const occ = [{"t":"Chief Executives","R":-1.407,"P":2.312,"e":199240,"c":2.6,"y":[6.0,0.3,-3.5],"cell":"nonroutine_embedded"},{"t":"General and Operations Managers","R":-1.36,"P":2.001,"e":3376680,"c":3.7,"y":[3.9,2.2,-2.3],"cell":"nonroutine_embedded"},{"t":"Advertising and Promotions Managers","R":-0.21,"P":0.292,"e":22010,"c":-2.5,"y":[-6.3,2.3,1.8],"cell":"nonroutine_embedded"},{"t":"Marketing Managers","R":-1.043,"P":1.166,"e":328570,"c":20.3,"y":[12.3,4.3,2.7],"cell":"nonroutine_embedded"},{"t":"Sales Managers","R":-0.92,"P":2.127,"e":536390,"c":18.8,"y":[7.4,4.8,5.5],"cell":"nonroutine_embedded"},{"t":"Computer and Information Systems Managers","R":-0.537,"P":0.659,"e":533220,"c":25.8,"y":[11.1,9.0,3.8],"cell":"nonroutine_embedded"},{"t":"Financial Managers","R":-0.259,"P":0.226,"e":740780,"c":13.6,"y":[6.3,4.0,2.8],"cell":"nonroutine_embedded"},{"t":"Purchasing Managers","R":-0.09,"P":1.767,"e":75070,"c":12.3,"y":[3.3,4.8,3.8],"cell":"nonroutine_embedded"},{"t":"Transportation, Storage, and Distribution Managers","R":0.03,"P":1.534,"e":169910,"c":30.2,"y":[17.0,7.2,3.8],"cell":"routine_embedded"},{"t":"Compensation and Benefits Managers","R":-0.226,"P":0.403,"e":16850,"c":36.1,"y":[10.9,7.4,14.3],"cell":"nonroutine_embedded"},{"t":"Human Resources Managers","R":-0.199,"P":2.056,"e":181360,"c":21.7,"y":[10.6,7.4,2.4],"cell":"nonroutine_embedded"},{"t":"Training and Development Managers","R":-0.787,"P":1.358,"e":39550,"c":21.5,"y":[5.0,8.2,6.9],"cell":"nonroutine_embedded"},{"t":"Education Administrators, Kindergarten through Secondary","R":-0.899,"P":2.594,"e":285910,"c":14.8,"y":[5.8,5.6,2.7],"cell":"nonroutine_embedded"},{"t":"Education Administrators, Postsecondary","R":-1.561,"P":1.316,"e":167060,"c":8.0,"y":[0.1,5.5,2.3],"cell":"nonroutine_embedded"},{"t":"Architectural and Engineering Managers","R":-0.724,"P":0.597,"e":197180,"c":11.7,"y":[5.4,1.2,4.7],"cell":"nonroutine_embedded"},{"t":"Medical and Health Services Managers","R":0.733,"P":2.191,"e":476750,"c":25.2,"y":[8.0,9.9,5.5],"cell":"routine_embedded"},{"t":"Natural Sciences Managers","R":-0.079,"P":0.303,"e":82570,"c":31.6,"y":[16.9,4.5,7.8],"cell":"nonroutine_embedded"},{"t":"Postmasters and Mail Superintendents","R":0.863,"P":1.816,"e":13460,"c":2.6,"y":[2.6,0.0,0.0],"cell":"routine_embedded"},{"t":"Property, Real Estate, and Community Association Managers","R":-0.347,"P":1.184,"e":261120,"c":19.2,"y":[8.8,4.4,4.9],"cell":"nonroutine_embedded"},{"t":"Social and Community Service Managers","R":-0.285,"P":0.988,"e":162880,"c":28.5,"y":[6.6,12.6,7.1],"cell":"nonroutine_embedded"},{"t":"Managers, All Other","R":-0.332,"P":1.31,"e":543290,"c":14.5,"y":[8.6,7.0,-1.4],"cell":"nonroutine_embedded"},{"t":"Agents and Business Managers of Artists, Performers, and Athletes","R":-0.534,"P":0.717,"e":13130,"c":-3.9,"y":[-2.0,10.5,-11.3],"cell":"nonroutine_embedded"},{"t":"Claims Adjusters, Examiners, and Investigators","R":0.253,"P":0.432,"e":285270,"c":13.7,"y":[3.0,3.8,6.3],"cell":"routine_embedded"},{"t":"Compliance Officers","R":0.715,"P":0.603,"e":359640,"c":16.0,"y":[6.7,3.7,4.9],"cell":"routine_embedded"},{"t":"Cost Estimators","R":0.595,"P":0.294,"e":225310,"c":-0.5,"y":[-1.9,-0.7,2.1],"cell":"routine_embedded"},{"t":"Human Resources Specialists","R":-0.165,"P":0.441,"e":835360,"c":9.2,"y":[7.3,2.4,-0.5],"cell":"nonroutine_embedded"},{"t":"Labor Relations Specialists","R":-0.489,"P":1.792,"e":62200,"c":4.2,"y":[1.0,2.9,0.3],"cell":"nonroutine_embedded"},{"t":"Logisticians","R":0.416,"P":0.277,"e":202970,"c":23.7,"y":[12.6,3.1,6.5],"cell":"routine_embedded"},{"t":"Management Analysts","R":-0.459,"P":1.377,"e":808860,"c":11.1,"y":[3.6,6.7,0.5],"cell":"nonroutine_embedded"},{"t":"Compensation, Benefits, and Job Analysis Specialists","R":0.93,"P":-0.128,"e":93550,"c":20.1,"y":[6.7,2.5,9.8],"cell":"routine_notembedded"},{"t":"Training and Development Specialists","R":-0.691,"P":1.026,"e":367180,"c":24.8,"y":[9.9,8.2,5.0],"cell":"nonroutine_embedded"},{"t":"Market Research Analysts and Marketing Specialists","R":-0.492,"P":-0.463,"e":798620,"c":12.6,"y":[6.0,1.7,4.5],"cell":"nonroutine_notembedded"},{"t":"Business Operations Specialists, All Other","R":-0.246,"P":0.404,"e":1081230,"c":0.5,"y":[2.1,2.2,-3.6],"cell":"nonroutine_embedded"},{"t":"Budget Analysts","R":0.372,"P":-0.997,"e":48430,"c":-2.6,"y":[-2.3,-0.3,-0.0],"cell":"routine_notembedded"},{"t":"Credit Analysts","R":0.964,"P":-1.2,"e":71960,"c":-10.5,"y":[1.7,-8.0,-4.4],"cell":"routine_notembedded"},{"t":"Personal Financial Advisors","R":-0.047,"P":0.788,"e":283060,"c":-5.7,"y":[-3.8,-0.6,-1.4],"cell":"nonroutine_embedded"},{"t":"Insurance Underwriters","R":0.175,"P":0.102,"e":105900,"c":-0.5,"y":[-4.3,6.4,-2.2],"cell":"routine_embedded"},{"t":"Financial Examiners","R":1.101,"P":1.464,"e":63370,"c":7.0,"y":[0.1,-1.0,8.0],"cell":"routine_embedded"},{"t":"Credit Counselors","R":0.598,"P":-0.025,"e":29090,"c":-4.5,"y":[-3.9,0.6,-1.2],"cell":"routine_embedded"},{"t":"Financial Specialists, All Other","R":0.391,"P":0.132,"e":127020,"c":4.0,"y":[-3.4,3.8,3.7],"cell":"routine_embedded"},{"t":"Computer Systems Analysts","R":0.156,"P":0.104,"e":505210,"c":2.8,"y":[-1.3,-0.2,4.4],"cell":"routine_embedded"},{"t":"Information Security Analysts","R":0.377,"P":-0.762,"e":163690,"c":16.5,"y":[7.1,2.3,6.3],"cell":"routine_notembedded"},{"t":"Computer and Information Research Scientists","R":-0.346,"P":-0.724,"e":33780,"c":10.1,"y":[4.2,9.3,-3.3],"cell":"nonroutine_notembedded"},{"t":"Computer Network Support Specialists","R":0.059,"P":-0.4,"e":168920,"c":-13.5,"y":[-6.0,-7.7,-0.2],"cell":"routine_notembedded"},{"t":"Computer User Support Specialists","R":-0.532,"P":-0.901,"e":696830,"c":2.9,"y":[-1.0,1.1,2.9],"cell":"nonroutine_notembedded"},{"t":"Computer Network Architects","R":0.477,"P":0.273,"e":173920,"c":3.3,"y":[0.1,1.7,1.5],"cell":"routine_embedded"},{"t":"Database Administrators","R":-0.312,"P":-0.944,"e":80520,"c":-13.1,"y":[-5.4,-3.9,-4.4],"cell":"nonroutine_notembedded"},{"t":"Database Architects","R":0.371,"P":-0.811,"e":62470,"c":7.5,"y":[-4.1,8.1,3.7],"cell":"routine_notembedded"},{"t":"Network and Computer Systems Administrators","R":0.191,"P":-0.836,"e":325930,"c":-3.6,"y":[-0.9,-1.4,-1.3],"cell":"routine_notembedded"},{"t":"Computer Programmers","R":1.683,"P":-1.187,"e":132740,"c":-30.5,"y":[-9.3,-8.7,-16.1],"cell":"routine_notembedded"},{"t":"Software Developers","R":-0.106,"P":-1.357,"e":1534790,"c":10.0,"y":[8.0,-0.1,2.0],"cell":"nonroutine_notembedded"},{"t":"Software Quality Assurance Analysts and Testers","R":0.565,"P":-0.762,"e":196420,"c":-4.9,"y":[3.4,-1.6,-6.5],"cell":"routine_notembedded"},{"t":"Web Developers","R":0.407,"P":-0.921,"e":88620,"c":-20.8,"y":[-3.7,-7.6,-11.0],"cell":"routine_notembedded"},{"t":"Web and Digital Interface Designers","R":0.507,"P":-0.354,"e":97350,"c":16.4,"y":[14.1,0.3,1.7],"cell":"routine_notembedded"},{"t":"Computer Occupations, All Other","R":0.395,"P":-0.238,"e":416320,"c":4.6,"y":[5.0,0.5,-0.9],"cell":"routine_notembedded"},{"t":"Actuaries","R":0.72,"P":-0.46,"e":25010,"c":6.6,"y":[1.8,11.3,-5.9],"cell":"routine_notembedded"},{"t":"Operations Research Analysts","R":-0.046,"P":-1.159,"e":105080,"c":3.3,"y":[12.2,-8.6,0.7],"cell":"nonroutine_notembedded"},{"t":"Statisticians","R":-0.237,"P":-1.128,"e":30780,"c":-5.7,"y":[-2.7,-0.5,-2.6],"cell":"nonroutine_notembedded"},{"t":"Data Scientists","R":0.308,"P":-0.649,"e":159630,"c":64.4,"y":[20.7,21.1,12.4],"cell":"routine_notembedded"},{"t":"Architects, Except Landscape and Naval","R":0.65,"P":0.701,"e":107490,"c":-0.7,"y":[3.4,-0.0,-3.9],"cell":"routine_embedded"},{"t":"Landscape Architects","R":0.484,"P":0.717,"e":18120,"c":8.2,"y":[12.4,-3.9,0.1],"cell":"routine_embedded"},{"t":"Cartographers and Photogrammetrists","R":0.51,"P":-1.003,"e":13270,"c":7.5,"y":[-7.1,3.7,11.5],"cell":"routine_notembedded"},{"t":"Surveyors","R":0.776,"P":-0.386,"e":47770,"c":6.4,"y":[6.2,4.6,-4.2],"cell":"routine_notembedded"},{"t":"Aerospace Engineers","R":-0.578,"P":-0.128,"e":61580,"c":10.0,"y":[8.2,2.7,-1.1],"cell":"nonroutine_notembedded"},{"t":"Bioengineers and Biomedical Engineers","R":-0.059,"P":-0.361,"e":19210,"c":22.2,"y":[0.6,13.1,7.4],"cell":"nonroutine_notembedded"},{"t":"Civil Engineers","R":0.37,"P":0.335,"e":307570,"c":19.6,"y":[6.6,8.4,3.5],"cell":"routine_embedded"},{"t":"Computer Hardware Engineers","R":0.041,"P":-0.773,"e":74640,"c":2.7,"y":[10.7,-8.4,1.3],"cell":"routine_notembedded"},{"t":"Electrical Engineers","R":-0.466,"P":0.029,"e":182210,"c":9.1,"y":[1.8,1.8,5.3],"cell":"nonroutine_embedded"},{"t":"Electronics Engineers, Except Computer","R":-0.542,"P":-0.193,"e":106640,"c":-9.1,"y":[-9.6,-2.6,3.2],"cell":"nonroutine_notembedded"},{"t":"Environmental Engineers","R":0.28,"P":0.362,"e":45440,"c":-15.6,"y":[-12.2,-4.8,1.0],"cell":"routine_embedded"},{"t":"Health and Safety Engineers, Except Mining Safety Engineers and Inspectors","R":-0.142,"P":0.419,"e":21520,"c":-0.3,"y":[4.6,3.2,-7.6],"cell":"nonroutine_embedded"},{"t":"Industrial Engineers","R":-0.315,"P":-0.171,"e":321400,"c":13.8,"y":[3.6,5.2,4.4],"cell":"nonroutine_notembedded"},{"t":"Mechanical Engineers","R":-0.072,"P":-0.198,"e":277560,"c":6.9,"y":[1.3,1.9,3.5],"cell":"nonroutine_notembedded"},{"t":"Petroleum Engineers","R":-0.325,"P":0.587,"e":20540,"c":-12.1,"y":[-0.7,-7.0,-4.8],"cell":"nonroutine_embedded"},{"t":"Engineers, All Other","R":-0.206,"P":-0.297,"e":150420,"c":2.4,"y":[0.4,-0.2,2.2],"cell":"nonroutine_notembedded"},{"t":"Electrical and Electronics Drafters","R":1.156,"P":-1.049,"e":20930,"c":-14.4,"y":[-1.2,-3.2,-10.5],"cell":"routine_notembedded"},{"t":"Mechanical Drafters","R":-0.273,"P":-1.368,"e":47540,"c":-15.9,"y":[-5.7,-11.0,0.2],"cell":"nonroutine_notembedded"},{"t":"Civil Engineering Technologists and Technicians","R":0.814,"P":-0.23,"e":62350,"c":9.9,"y":[1.9,-2.2,10.3],"cell":"routine_notembedded"},{"t":"Soil and Plant Scientists","R":-0.553,"P":-0.408,"e":16010,"c":-1.7,"y":[-1.3,5.1,-5.2],"cell":"nonroutine_notembedded"},{"t":"Zoologists and Wildlife Biologists","R":0.147,"P":0.993,"e":17410,"c":4.1,"y":[-1.8,-1.1,7.1],"cell":"routine_embedded"},{"t":"Biological Scientists, All Other","R":-0.627,"P":-0.011,"e":55300,"c":1.0,"y":[10.7,-2.5,-6.5],"cell":"nonroutine_embedded"},{"t":"Conservation Scientists","R":0.031,"P":0.625,"e":22880,"c":13.4,"y":[-0.4,12.3,1.4],"cell":"routine_embedded"},{"t":"Medical Scientists, Except Epidemiologists","R":0.214,"P":-0.108,"e":110550,"c":55.9,"y":[23.6,14.4,10.3],"cell":"routine_notembedded"},{"t":"Physicists","R":-1.309,"P":-0.626,"e":18840,"c":8.4,"y":[-2.6,16.3,-4.3],"cell":"nonroutine_notembedded"},{"t":"Environmental Scientists and Specialists, Including Health","R":-0.412,"P":-0.036,"e":77270,"c":15.5,"y":[4.5,5.2,5.1],"cell":"nonroutine_notembedded"},{"t":"Geoscientists, Except Hydrologists and Geographers","R":-0.158,"P":-0.238,"e":25230,"c":-7.0,"y":[-2.4,-8.6,4.3],"cell":"nonroutine_notembedded"},{"t":"Physical Scientists, All Other","R":0.215,"P":-0.474,"e":19820,"c":12.5,"y":[5.0,8.5,-1.2],"cell":"routine_notembedded"},{"t":"Economists","R":-1.502,"P":-1.594,"e":16370,"c":8.7,"y":[0.3,-3.3,12.0],"cell":"nonroutine_notembedded"},{"t":"Psychologists, All Other","R":-1.12,"P":0.745,"e":13900,"c":35.4,"y":[4.2,22.9,5.8],"cell":"nonroutine_embedded"},{"t":"Social Scientists and Related Workers, All Other","R":-0.002,"P":0.186,"e":33210,"c":11.7,"y":[6.0,5.0,0.4],"cell":"nonroutine_embedded"},{"t":"Social Science Research Assistants","R":1.016,"P":-1.447,"e":28720,"c":6.7,"y":[7.6,6.6,-7.0],"cell":"routine_notembedded"},{"t":"Life, Physical, and Social Science Technicians, All Other","R":0.972,"P":-1.184,"e":70770,"c":4.4,"y":[2.1,-1.1,3.5],"cell":"routine_notembedded"},{"t":"Educational, Guidance, and Career Counselors and Advisors","R":0.349,"P":1.075,"e":308000,"c":14.7,"y":[6.4,4.5,3.2],"cell":"routine_embedded"},{"t":"Marriage and Family Therapists","R":-1.161,"P":0.908,"e":62080,"c":7.5,"y":[2.0,4.0,1.3],"cell":"nonroutine_embedded"},{"t":"Rehabilitation Counselors","R":0.371,"P":0.993,"e":82420,"c":14.9,"y":[2.8,4.9,6.5],"cell":"routine_embedded"},{"t":"Probation Officers and Correctional Treatment Specialists","R":0.709,"P":0.868,"e":89920,"c":-0.6,"y":[-4.5,1.1,3.0],"cell":"routine_embedded"},{"t":"Clergy","R":-0.87,"P":1.674,"e":53140,"c":7.6,"y":[6.6,2.5,-1.5],"cell":"nonroutine_embedded"},{"t":"Directors, Religious Activities and Education","R":-2.487,"P":1.446,"e":24030,"c":-7.8,"y":[-3.2,-7.8,3.3],"cell":"nonroutine_embedded"},{"t":"Lawyers","R":-1.392,"P":1.766,"e":707160,"c":6.7,"y":[3.4,2.2,0.9],"cell":"nonroutine_embedded"},{"t":"Judicial Law Clerks","R":1.059,"P":-2.006,"e":15540,"c":-14.5,"y":[-5.5,-9.9,0.5],"cell":"routine_notembedded"},{"t":"Administrative Law Judges, Adjudicators, and Hearing Officers","R":-0.026,"P":-0.107,"e":12490,"c":31.1,"y":[17.5,10.6,0.9],"cell":"nonroutine_notembedded"},{"t":"Paralegals and Legal Assistants","R":0.37,"P":-0.91,"e":345240,"c":13.8,"y":[2.8,3.5,7.0],"cell":"routine_notembedded"},{"t":"Title Examiners, Abstractors, and Searchers","R":-0.428,"P":-0.967,"e":53680,"c":-9.5,"y":[-7.3,-3.2,0.9],"cell":"nonroutine_notembedded"},{"t":"Business Teachers, Postsecondary","R":-1.564,"P":-0.976,"e":78410,"c":4.8,"y":[5.8,-1.4,0.5],"cell":"nonroutine_notembedded"},{"t":"Computer Science Teachers, Postsecondary","R":-1.597,"P":-0.128,"e":33870,"c":4.8,"y":[6.7,0.2,-2.1],"cell":"nonroutine_notembedded"},{"t":"Mathematical Science Teachers, Postsecondary","R":-0.317,"P":-0.881,"e":46560,"c":2.4,"y":[3.6,1.2,-2.4],"cell":"nonroutine_notembedded"},{"t":"Engineering Teachers, Postsecondary","R":-1.559,"P":-0.213,"e":36010,"c":11.8,"y":[6.6,4.0,0.9],"cell":"nonroutine_notembedded"},{"t":"Biological Science Teachers, Postsecondary","R":-2.0,"P":-1.177,"e":49920,"c":0.5,"y":[4.3,2.3,-5.7],"cell":"nonroutine_notembedded"},{"t":"Atmospheric, Earth, Marine, and Space Sciences Teachers, Postsecondary","R":-1.357,"P":-0.312,"e":11150,"c":-11.2,"y":[5.6,-2.5,-13.8],"cell":"nonroutine_notembedded"},{"t":"Physics Teachers, Postsecondary","R":-1.924,"P":-0.697,"e":12860,"c":1.8,"y":[9.1,-3.1,-3.7],"cell":"nonroutine_notembedded"},{"t":"Economics Teachers, Postsecondary","R":-1.817,"P":-1.661,"e":11640,"c":-0.7,"y":[4.9,1.7,-6.9],"cell":"nonroutine_notembedded"},{"t":"Political Science Teachers, Postsecondary","R":-1.979,"P":-0.752,"e":15190,"c":11.7,"y":[12.5,0.5,-1.2],"cell":"nonroutine_notembedded"},{"t":"Psychology Teachers, Postsecondary","R":-1.466,"P":0.138,"e":40050,"c":3.7,"y":[1.4,2.5,-0.2],"cell":"nonroutine_embedded"},{"t":"Sociology Teachers, Postsecondary","R":-1.439,"P":-0.139,"e":12030,"c":-1.5,"y":[7.0,-3.8,-4.3],"cell":"nonroutine_notembedded"},{"t":"Health Specialties Teachers, Postsecondary","R":-1.864,"P":0.214,"e":207700,"c":6.5,"y":[8.5,1.9,-3.7],"cell":"nonroutine_embedded"},{"t":"Nursing Instructors and Teachers, Postsecondary","R":0.085,"P":1.077,"e":69190,"c":12.7,"y":[5.1,2.1,5.0],"cell":"routine_embedded"},{"t":"Education Teachers, Postsecondary","R":-1.262,"P":-0.216,"e":58280,"c":4.4,"y":[4.4,-2.9,2.9],"cell":"nonroutine_notembedded"},{"t":"Criminal Justice and Law Enforcement Teachers, Postsecondary","R":-1.196,"P":-0.861,"e":13900,"c":-5.4,"y":[-3.7,1.3,-3.0],"cell":"nonroutine_notembedded"},{"t":"Law Teachers, Postsecondary","R":-2.298,"P":-1.212,"e":14830,"c":35.3,"y":[-1.8,56.5,-12.0],"cell":"nonroutine_notembedded"},{"t":"Social Work Teachers, Postsecondary","R":-1.766,"P":0.298,"e":12050,"c":4.6,"y":[-2.7,13.8,-5.5],"cell":"nonroutine_embedded"},{"t":"Art, Drama, and Music Teachers, Postsecondary","R":-1.104,"P":0.647,"e":97830,"c":-4.4,"y":[3.8,-3.6,-4.4],"cell":"nonroutine_embedded"},{"t":"Communications Teachers, Postsecondary","R":-1.683,"P":0.153,"e":27350,"c":7.6,"y":[4.3,2.6,0.5],"cell":"nonroutine_embedded"},{"t":"English Language and Literature Teachers, Postsecondary","R":-1.359,"P":-0.255,"e":57680,"c":0.1,"y":[-0.1,3.5,-3.1],"cell":"nonroutine_notembedded"},{"t":"Foreign Language and Literature Teachers, Postsecondary","R":-1.479,"P":-0.981,"e":19520,"c":1.6,"y":[6.7,1.7,-6.3],"cell":"nonroutine_notembedded"},{"t":"History Teachers, Postsecondary","R":-1.683,"P":-0.772,"e":18250,"c":3.0,"y":[12.9,-3.6,-5.4],"cell":"nonroutine_notembedded"},{"t":"Philosophy and Religion Teachers, Postsecondary","R":-1.242,"P":-0.922,"e":21620,"c":-5.4,"y":[-6.0,2.6,-1.8],"cell":"nonroutine_notembedded"},{"t":"Recreation and Fitness Studies Teachers, Postsecondary","R":-1.454,"P":0.199,"e":13400,"c":-5.7,"y":[-1.0,-4.4,-0.4],"cell":"nonroutine_embedded"},{"t":"Career/Technical Education Teachers, Postsecondary","R":-0.524,"P":0.476,"e":103100,"c":10.7,"y":[7.8,-0.0,2.7],"cell":"nonroutine_embedded"},{"t":"Preschool Teachers, Except Special Education","R":0.652,"P":0.3,"e":415360,"c":15.3,"y":[3.6,3.4,7.6],"cell":"routine_embedded"},{"t":"Kindergarten Teachers, Except Special Education","R":-0.005,"P":1.431,"e":119250,"c":-8.7,"y":[-0.6,-3.5,-4.8],"cell":"nonroutine_embedded"},{"t":"Elementary School Teachers, Except Special Education","R":0.027,"P":1.496,"e":1394200,"c":-0.4,"y":[1.1,-1.2,-0.4],"cell":"nonroutine_embedded"},{"t":"Middle School Teachers, Except Special and Career/Technical Education","R":-0.672,"P":1.008,"e":611120,"c":1.5,"y":[2.5,-1.0,-0.0],"cell":"nonroutine_embedded"},{"t":"Career/Technical Education Teachers, Middle School","R":-0.606,"P":1.095,"e":11110,"c":51.8,"y":[9.9,16.3,18.8],"cell":"nonroutine_embedded"},{"t":"Secondary School Teachers, Except Special and Career/Technical Education","R":-0.48,"P":0.999,"e":1042090,"c":2.2,"y":[0.3,2.6,-0.7],"cell":"nonroutine_embedded"},{"t":"Career/Technical Education Teachers, Secondary School","R":0.124,"P":1.777,"e":88280,"c":26.2,"y":[2.0,16.0,6.7],"cell":"routine_embedded"},{"t":"Special Education Teachers, Preschool","R":0.246,"P":0.951,"e":22970,"c":28.5,"y":[8.2,13.5,4.6],"cell":"routine_embedded"},{"t":"Adult Basic Education, Adult Secondary Education, and English as a Second Language Instructors","R":-0.592,"P":-0.212,"e":36490,"c":2.2,"y":[1.1,-1.7,2.9],"cell":"nonroutine_notembedded"},{"t":"Self-Enrichment Teachers","R":-1.08,"P":0.146,"e":248150,"c":33.8,"y":[9.7,13.4,7.6],"cell":"nonroutine_embedded"},{"t":"Curators","R":-1.314,"P":-0.115,"e":11620,"c":4.6,"y":[7.7,-1.8,-1.1],"cell":"nonroutine_notembedded"},{"t":"Library Technicians","R":0.45,"P":-1.388,"e":73330,"c":-6.3,"y":[4.6,-3.8,-6.9],"cell":"routine_notembedded"},{"t":"Instructional Coordinators","R":-0.055,"P":1.119,"e":198660,"c":14.6,"y":[4.3,1.7,8.0],"cell":"nonroutine_embedded"},{"t":"Art Directors","R":0.057,"P":0.34,"e":54470,"c":-2.6,"y":[-6.0,-1.6,5.4],"cell":"routine_embedded"},{"t":"Fine Artists, Including Painters, Sculptors, and Illustrators","R":-1.306,"P":-2.121,"e":12080,"c":-7.1,"y":[-9.7,-8.3,12.2],"cell":"nonroutine_notembedded"},{"t":"Special Effects Artists and Animators","R":0.207,"P":-0.886,"e":35990,"c":-44.5,"y":[-16.8,-28.9,-6.2],"cell":"routine_notembedded"},{"t":"Commercial and Industrial Designers","R":1.276,"P":-0.421,"e":30450,"c":10.0,"y":[1.2,-1.8,10.7],"cell":"routine_notembedded"},{"t":"Fashion Designers","R":1.107,"P":1.14,"e":20560,"c":4.3,"y":[-3.0,4.9,2.6],"cell":"routine_embedded"},{"t":"Floral Designers","R":-0.829,"P":-0.829,"e":42840,"c":-5.3,"y":[1.2,-7.4,1.1],"cell":"nonroutine_notembedded"},{"t":"Graphic Designers","R":0.39,"P":0.081,"e":211890,"c":-6.6,"y":[0.4,0.7,-7.7],"cell":"routine_embedded"},{"t":"Interior Designers","R":0.429,"P":1.436,"e":64290,"c":11.2,"y":[5.4,2.7,2.8],"cell":"routine_embedded"},{"t":"Producers and Directors","R":-0.244,"P":0.691,"e":153770,"c":-6.9,"y":[0.5,-6.0,-1.5],"cell":"nonroutine_embedded"},{"t":"Athletes and Sports Competitors","R":0.485,"P":0.129,"e":11930,"c":26.3,"y":[25.1,-3.8,4.9],"cell":"routine_embedded"},{"t":"Coaches and Scouts","R":-0.324,"P":1.66,"e":218970,"c":13.7,"y":[9.1,5.0,-0.8],"cell":"nonroutine_embedded"},{"t":"Music Directors and Composers","R":-0.925,"P":0.396,"e":11690,"c":7.3,"y":[-7.9,14.5,1.7],"cell":"nonroutine_embedded"},{"t":"Public Relations Specialists","R":0.213,"P":1.115,"e":264750,"c":7.0,"y":[4.1,1.8,1.0],"cell":"routine_embedded"},{"t":"Editors","R":0.571,"P":-0.219,"e":101430,"c":-9.6,"y":[-5.6,-0.2,-4.0],"cell":"routine_notembedded"},{"t":"Technical Writers","R":1.292,"P":-0.847,"e":48620,"c":-6.4,"y":[-1.3,15.8,-18.1],"cell":"routine_notembedded"},{"t":"Writers and Authors","R":0.268,"P":-1.369,"e":54010,"c":-11.2,"y":[-8.4,-3.3,0.3],"cell":"routine_notembedded"},{"t":"Audio and Video Technicians","R":0.506,"P":-0.832,"e":56110,"c":25.2,"y":[18.9,5.1,0.2],"cell":"routine_notembedded"},{"t":"Broadcast Technicians","R":0.643,"P":-0.562,"e":33020,"c":-36.1,"y":[-20.7,-19.5,0.1],"cell":"routine_notembedded"},{"t":"Sound Engineering Technicians","R":0.481,"P":0.401,"e":13420,"c":-2.5,"y":[8.8,-10.6,0.2],"cell":"routine_embedded"},{"t":"Photographers","R":0.047,"P":0.548,"e":47380,"c":9.2,"y":[13.2,-4.5,1.0],"cell":"routine_embedded"},{"t":"Film and Video Editors","R":0.75,"P":-0.706,"e":32080,"c":-20.2,"y":[-8.9,-1.3,-11.3],"cell":"routine_notembedded"},{"t":"Recreational Therapists","R":-0.597,"P":1.482,"e":15920,"c":-6.2,"y":[-2.4,-3.1,-0.9],"cell":"nonroutine_embedded"},{"t":"Speech-Language Pathologists","R":-1.329,"P":0.807,"e":162760,"c":12.7,"y":[5.7,3.9,2.6],"cell":"nonroutine_embedded"},{"t":"Athletic Trainers","R":0.114,"P":-0.401,"e":29720,"c":2.6,"y":[-4.2,1.7,5.4],"cell":"routine_notembedded"},{"t":"Medical Transcriptionists","R":1.118,"P":-1.818,"e":48680,"c":-14.6,"y":[7.7,-17.8,-3.5],"cell":"routine_notembedded"},{"t":"Healthcare Support Workers, All Other","R":1.338,"P":-0.36,"e":107170,"c":2.4,"y":[-4.6,1.4,5.9],"cell":"routine_notembedded"},{"t":"Detectives and Criminal Investigators","R":-0.201,"P":0.569,"e":107400,"c":6.5,"y":[-0.6,3.8,3.3],"cell":"nonroutine_embedded"},{"t":"Private Detectives and Investigators","R":-0.594,"P":0.231,"e":32050,"c":11.0,"y":[8.0,11.8,-8.1],"cell":"nonroutine_embedded"},{"t":"Gambling Surveillance Officers and Gambling Investigators","R":0.778,"P":-0.437,"e":10500,"c":-9.3,"y":[1.5,-6.2,-4.8],"cell":"routine_notembedded"},{"t":"Protective Service Workers, All Other","R":0.322,"P":0.04,"e":93840,"c":-13.2,"y":[-12.1,0.7,-1.9],"cell":"routine_embedded"},{"t":"Gambling Dealers","R":4.143,"P":-0.788,"e":71290,"c":17.7,"y":[13.0,3.0,1.1],"cell":"routine_notembedded"},{"t":"Ushers, Lobby Attendants, and Ticket Takers","R":2.111,"P":-0.871,"e":98350,"c":23.8,"y":[19.5,1.4,2.1],"cell":"routine_notembedded"},{"t":"Childcare Workers","R":-0.462,"P":0.165,"e":459460,"c":12.9,"y":[8.3,4.6,-0.2],"cell":"nonroutine_embedded"},{"t":"Recreation Workers","R":0.031,"P":1.167,"e":270380,"c":22.6,"y":[4.2,9.9,7.1],"cell":"routine_embedded"},{"t":"Residential Advisors","R":0.477,"P":0.922,"e":86770,"c":-2.3,"y":[2.2,-6.6,2.4],"cell":"routine_embedded"},{"t":"First-Line Supervisors of Non-Retail Sales Workers","R":0.406,"P":1.531,"e":237520,"c":-9.7,"y":[-4.4,-3.6,-2.1],"cell":"routine_embedded"},{"t":"Insurance Sales Agents","R":0.744,"P":0.2,"e":445540,"c":7.5,"y":[2.7,2.6,2.0],"cell":"routine_embedded"},{"t":"Securities, Commodities, and Financial Services Sales Agents","R":-0.485,"P":0.374,"e":443220,"c":10.5,"y":[8.2,-1.5,3.7],"cell":"nonroutine_embedded"},{"t":"Sales Representatives, Wholesale and Manufacturing, Technical and Scientific Products","R":-0.667,"P":0.462,"e":290830,"c":-2.1,"y":[7.2,-5.7,-3.1],"cell":"nonroutine_embedded"},{"t":"Sales Representatives, Wholesale and Manufacturing, Except Technical and Scientific Products","R":-0.732,"P":1.191,"e":1273400,"c":-2.8,"y":[1.2,-1.7,-2.3],"cell":"nonroutine_embedded"},{"t":"Real Estate Brokers","R":-1.65,"P":0.897,"e":52310,"c":-11.9,"y":[-1.8,-3.4,-7.0],"cell":"nonroutine_embedded"},{"t":"Sales Engineers","R":-0.757,"P":0.766,"e":59700,"c":-13.2,"y":[-0.6,-4.5,-8.6],"cell":"nonroutine_embedded"},{"t":"Telemarketers","R":2.137,"P":0.186,"e":96520,"c":-39.5,"y":[-15.5,-18.6,-12.0],"cell":"routine_embedded"},{"t":"First-Line Supervisors of Office and Administrative Support Workers","R":-0.19,"P":1.551,"e":1495440,"c":-3.9,"y":[0.6,-0.6,-3.9],"cell":"nonroutine_embedded"},{"t":"Switchboard Operators, Including Answering Service","R":1.454,"P":-1.15,"e":47430,"c":-27.7,"y":[-7.6,-18.5,-4.1],"cell":"routine_notembedded"},{"t":"Bill and Account Collectors","R":2.601,"P":-0.186,"e":202840,"c":-21.7,"y":[-5.9,-13.6,-3.8],"cell":"routine_notembedded"},{"t":"Billing and Posting Clerks","R":0.754,"P":-1.766,"e":441980,"c":-8.6,"y":[-2.7,-3.0,-3.2],"cell":"routine_notembedded"},{"t":"Bookkeeping, Accounting, and Auditing Clerks","R":1.749,"P":-1.211,"e":1550750,"c":-11.4,"y":[-3.1,-3.1,-5.6],"cell":"routine_notembedded"},{"t":"Payroll and Timekeeping Clerks","R":2.173,"P":-1.435,"e":159190,"c":-3.8,"y":[-1.2,-0.2,-2.4],"cell":"routine_notembedded"},{"t":"Procurement Clerks","R":0.395,"P":0.358,"e":63340,"c":-11.9,"y":[-2.8,-2.7,-6.8],"cell":"routine_embedded"},{"t":"Brokerage Clerks","R":1.166,"P":-0.626,"e":42700,"c":-15.8,"y":[12.6,-16.6,-10.4],"cell":"routine_notembedded"},{"t":"Court, Municipal, and License Clerks","R":0.892,"P":-0.826,"e":159760,"c":12.5,"y":[-1.1,7.6,5.7],"cell":"routine_notembedded"},{"t":"Customer Service Representatives","R":2.898,"P":-0.031,"e":2879840,"c":-9.9,"y":[-0.7,-4.6,-4.8],"cell":"routine_notembedded"},{"t":"File Clerks","R":1.801,"P":-0.609,"e":87250,"c":-15.8,"y":[-5.7,-4.0,-7.0],"cell":"routine_notembedded"},{"t":"Interviewers, Except Eligibility and Loan","R":1.772,"P":0.28,"e":168680,"c":-12.2,"y":[-4.8,-2.0,-5.9],"cell":"routine_embedded"},{"t":"Order Clerks","R":0.31,"P":-0.298,"e":113500,"c":-33.7,"y":[-19.1,-9.2,-9.9],"cell":"routine_notembedded"},{"t":"Human Resources Assistants, Except Payroll and Timekeeping","R":0.841,"P":-0.089,"e":103680,"c":-13.0,"y":[-2.2,-8.7,-2.5],"cell":"routine_notembedded"},{"t":"Cargo and Freight Agents","R":0.799,"P":0.207,"e":93480,"c":4.5,"y":[12.6,-7.1,-0.1],"cell":"routine_embedded"},{"t":"Couriers and Messengers","R":-0.486,"P":-2.288,"e":75800,"c":-9.4,"y":[-5.0,-0.1,-4.6],"cell":"nonroutine_notembedded"},{"t":"Dispatchers, Except Police, Fire, and Ambulance","R":0.259,"P":0.192,"e":206370,"c":-1.7,"y":[-0.1,2.4,-3.9],"cell":"routine_embedded"},{"t":"Executive Secretaries and Executive Administrative Assistants","R":-0.309,"P":-0.215,"e":475240,"c":-3.2,"y":[1.8,-2.2,-2.7],"cell":"nonroutine_notembedded"},{"t":"Legal Secretaries and Administrative Assistants","R":1.61,"P":-1.092,"e":159940,"c":-2.3,"y":[-4.5,1.1,1.1],"cell":"routine_notembedded"},{"t":"Medical Secretaries and Administrative Assistants","R":1.376,"P":-0.999,"e":682630,"c":40.9,"y":[9.8,10.8,15.8],"cell":"routine_notembedded"},{"t":"Secretaries and Administrative Assistants, Except Legal, Medical, and Executive","R":0.956,"P":-1.232,"e":1826710,"c":-6.6,"y":[-2.3,-2.7,-1.8],"cell":"routine_notembedded"},{"t":"Data Entry Keyers","R":0.476,"P":-1.484,"e":157380,"c":-19.3,"y":[-2.0,-12.3,-6.1],"cell":"routine_notembedded"},{"t":"Word Processors and Typists","R":1.288,"P":-1.362,"e":41990,"c":-16.6,"y":[-11.4,-3.1,-2.8],"cell":"routine_notembedded"},{"t":"Insurance Claims and Policy Processing Clerks","R":1.234,"P":-0.868,"e":227580,"c":-5.9,"y":[6.2,-5.2,-6.5],"cell":"routine_notembedded"},{"t":"Mail Clerks and Mail Machine Operators, Except Postal Service","R":0.525,"P":-1.758,"e":67750,"c":-18.5,"y":[-1.7,-5.8,-12.0],"cell":"routine_notembedded"},{"t":"Office Clerks, General","R":2.106,"P":-1.139,"e":2517350,"c":-2.1,"y":[-0.8,0.6,-1.8],"cell":"routine_notembedded"},{"t":"Office Machine Operators, Except Computer","R":1.636,"P":-1.442,"e":30410,"c":-17.4,"y":[-8.1,-11.5,1.6],"cell":"routine_notembedded"},{"t":"First-Line Supervisors of Farming, Fishing, and Forestry Workers","R":-0.376,"P":0.633,"e":27670,"c":1.0,"y":[-1.9,8.8,-5.3],"cell":"nonroutine_embedded"},{"t":"Coin, Vending, and Amusement Machine Servicers and Repairers","R":0.011,"P":-2.216,"e":35790,"c":-26.2,"y":[0.9,-21.7,-6.5],"cell":"nonroutine_notembedded"},{"t":"Prepress Technicians and Workers","R":0.937,"P":-0.573,"e":25250,"c":-5.6,"y":[-6.6,-2.2,3.3],"cell":"routine_notembedded"},{"t":"Jewelers and Precious Stone and Metal Workers","R":1.231,"P":-0.749,"e":26280,"c":-14.6,"y":[-8.4,-2.7,-4.2],"cell":"routine_notembedded"},{"t":"Ophthalmic Laboratory Technicians","R":0.574,"P":-1.406,"e":20200,"c":-7.6,"y":[-9.7,2.7,-0.4],"cell":"routine_notembedded"},{"t":"Painting, Coating, and Decorating Workers","R":0.43,"P":-2.277,"e":11990,"c":-33.8,"y":[-10.8,-20.8,-6.3],"cell":"routine_notembedded"},{"t":"Air Traffic Controllers","R":1.028,"P":0.813,"e":21250,"c":5.9,"y":[5.0,0.4,0.5],"cell":"routine_embedded"}];
+  const cells = {"non-routine / embedded":{"idx":[100.0,104.23,106.64,106.42],"m":21.3,"n":64,"chg":6.6},"non-routine / not embedded":{"idx":[100.0,103.66,104.02,105.68],"m":5.7,"n":45,"chg":5.7},"routine / embedded":{"idx":[100.0,102.62,105.38,107.99],"m":6.8,"n":45,"chg":8.4},"routine / not embedded":{"idx":[100.0,99.96,98.4,96.75],"m":15.3,"n":64,"chg":-2.6}};
+  const RM = 0.0284, PM = -0.0282;
+  const fmtEmp = n => n >= 1e6 ? (n/1e6).toFixed(2) + 'M' : Math.round(n/1000) + 'k';
+  const cellName = c => ({routine_notembedded: 'Routine, not embedded', routine_embedded: 'Routine, embedded', nonroutine_notembedded: 'Non-routine, not embedded', nonroutine_embedded: 'Non-routine, embedded'})[c];
+
+  function renderMap(query) {
+    const q = query.trim().toLowerCase();
+    const matched = q ? occ.filter(d => d.t.toLowerCase().includes(q)) : [];
+    const matchedSet = new Set(matched.map(d => d.t));
+    const base = q ? occ.filter(d => !matchedSet.has(d.t)) : occ;
+    const size = d => Math.max(6, Math.sqrt(d.e / 4000) * 1.6);
+    const hover = d => `<b>${d.t}</b><br>Employment change 2022–25: ${d.c > 0 ? '+' : ''}${d.c}%<br>2022 employment: ${fmtEmp(d.e)}<br>Routineness: ${d.R.toFixed(2)} · Polanyi: ${d.P.toFixed(2)}<br>${cellName(d.cell)}<extra></extra>`;
+    const traces = [{
+      type: 'scatter', mode: 'markers',
+      x: base.map(d => d.R), y: base.map(d => d.P),
+      marker: { size: base.map(size), color: base.map(d => d.c < 0 ? '#dc2626' : '#2563eb'), opacity: q ? 0.15 : 0.5, line: { width: 0.5, color: base.map(d => d.c < 0 ? '#dc2626' : '#2563eb') } },
+      hovertemplate: base.map(hover), showlegend: false
+    }];
+    if (matched.length) {
+      traces.push({
+        type: 'scatter', mode: 'markers+text',
+        x: matched.map(d => d.R), y: matched.map(d => d.P),
+        text: matched.map(d => `${d.t.split(',')[0]} ${d.c > 0 ? '+' : ''}${d.c}%`), textposition: 'top center',
+        textfont: { family: 'Inter', size: 11, color: '#1c1917' },
+        marker: { size: matched.map(size), color: matched.map(d => d.c < 0 ? '#dc2626' : '#2563eb'), opacity: 0.95, line: { width: 2, color: '#1c1917' } },
+        hovertemplate: matched.map(hover), showlegend: false
+      });
+    }
+    const ann = [
+      { x: 3.1, y: -2.6, text: `Routine, not embedded: ${cells['routine / not embedded'].chg}%`, font: { color: '#991b1b', size: 11, family: 'Inter' } , xanchor: 'right' },
+      { x: 3.1, y: 2.9, text: `Routine, embedded: +${cells['routine / embedded'].chg}%`, font: { color: '#1e40af', size: 11, family: 'Inter' }, xanchor: 'right' },
+      { x: -2.7, y: -2.6, text: `Non-routine, not embedded: +${cells['non-routine / not embedded'].chg}%`, font: { color: '#1e40af', size: 11, family: 'Inter' }, xanchor: 'left' },
+      { x: -2.7, y: 2.9, text: `Non-routine, embedded: +${cells['non-routine / embedded'].chg}%`, font: { color: '#1e40af', size: 11, family: 'Inter' }, xanchor: 'left' }
+    ].map(a => Object.assign({ showarrow: false, yanchor: 'middle' }, a));
+    Plotly.react('chart-map', traces, {
+      xaxis: { title: { text: 'Routineness  →  more routine', font: { family: 'Inter', size: 12 } }, range: [-2.8, 3.2], gridcolor: '#f1f5f9', zeroline: false },
+      yaxis: { title: { text: 'Polanyi embedding  →  more embedded', font: { family: 'Inter', size: 12 } }, range: [-2.8, 3.1], gridcolor: '#f1f5f9', zeroline: false },
+      shapes: [
+        { type: 'rect', x0: RM, x1: 3.2, y0: -2.8, y1: PM, fillcolor: '#fee2e2', opacity: 0.3, line: { width: 0 }, layer: 'below' },
+        { type: 'line', x0: RM, x1: RM, y0: -2.8, y1: 3.1, line: { color: '#a8a29e', width: 1, dash: 'dot' } },
+        { type: 'line', x0: -2.8, x1: 3.2, y0: PM, y1: PM, line: { color: '#a8a29e', width: 1, dash: 'dot' } }
+      ],
+      annotations: document.getElementById('chart-map').clientWidth < 600 ? [] : ann,
+      plot_bgcolor: 'white', paper_bgcolor: 'white',
+      margin: { l: 55, r: 20, t: 10, b: 50 }, height: 520, font: { family: 'Inter' }, hovermode: 'closest'
+    }, { responsive: true, displayModeBar: false });
+  }
+  let currentQuery = '';
+  renderMap('');
+  document.getElementById('map-search').addEventListener('input', e => { currentQuery = e.target.value; renderMap(currentQuery); });
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => renderMap(currentQuery), 200); });
+
+  const years = ['May 2022', 'May 2023', 'May 2024', 'May 2025'];
+  const style = {
+    'routine / not embedded': { color: '#dc2626', dash: 'solid' },
+    'routine / embedded': { color: '#2563eb', dash: 'dash' },
+    'non-routine / not embedded': { color: '#16a34a', dash: 'dashdot' },
+    'non-routine / embedded': { color: '#7c3aed', dash: 'dot' }
+  };
+  const short = { 'routine / not embedded': 'Routine,<br>not embedded', 'routine / embedded': 'Routine,<br>embedded', 'non-routine / not embedded': 'Non-routine,<br>not embedded', 'non-routine / embedded': 'Non-routine,<br>embedded' };
+  const endY = {};
+  Object.keys(style).forEach(k => endY[k] = cells[k].idx[3]);
+  // nudge labels apart if two endpoints are within 1.6 index points
+  const order = Object.keys(style).sort((a, b) => endY[a] - endY[b]);
+  for (let i = 1; i < order.length; i++) if (endY[order[i]] - endY[order[i-1]] < 1.6) endY[order[i]] = endY[order[i-1]] + 1.6;
+  Plotly.newPlot('chart-cells', Object.keys(style).map(k => ({
+    type: 'scatter', mode: 'lines+markers', name: k,
+    x: years, y: cells[k].idx,
+    line: { color: style[k].color, width: 2.5, dash: style[k].dash }, marker: { size: 7 },
+    hovertemplate: `%{x}: %{y:.1f}<extra>${k} · ${cells[k].m}M workers</extra>`
+  })), {
+    yaxis: { title: { text: 'Employment index (May 2022 = 100)', font: { family: 'Inter', size: 12 } }, gridcolor: '#f1f5f9', zeroline: false },
+    xaxis: { gridcolor: '#f1f5f9' },
+    shapes: [{ type: 'line', x0: 0, x1: 1, xref: 'paper', y0: 100, y1: 100, line: { color: '#d6d3d1', width: 1 } }],
+    annotations: Object.keys(style).map(k => ({ x: 'May 2025', y: endY[k], xshift: 10, xanchor: 'left', yanchor: 'middle', showarrow: false, text: `${short[k]} (${cells[k].m}M)`, font: { family: 'Inter', size: 11, color: style[k].color }, align: 'left' })),
+    showlegend: false,
+    plot_bgcolor: 'white', paper_bgcolor: 'white',
+    margin: { l: 55, r: 150, t: 10, b: 30 }, height: 400, font: { family: 'Inter' }, hovermode: 'x unified'
+  }, { responsive: true, displayModeBar: false });
+})();
+</script>
+
+</body>
+</html>

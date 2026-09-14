@@ -4,7 +4,7 @@ Reproducible pipeline for the September 2026 follow-up post. Tests the March 202
 model and Tyler Cowen's two-factor (Intelligence × Polanyi) model against BLS occupation employment,
 May 2022–May 2025, and Indeed postings through September 2026.
 
-**[Read the post](../docs/routine-went-first.md)** · [Pipeline spec with checkpoints](PIPELINE_SPEC.md)
+**[Read the post](https://jbgh2.github.io/ai-worker-displacement/routine-went-first.html)** · [markdown source](../docs/routine-went-first.md) · [Pipeline spec with checkpoints](PIPELINE_SPEC.md)
 
 ## Run it
 
