@@ -47,6 +47,33 @@ def write_map_svg(kw, cells, rm, pm, labels):
     o.append("</svg>")
     (FIGURES / "fig_routine_polanyi_map.svg").write_text("\n".join(o))
 
+def write_cells_svg(cells, style):
+    """Compact hand-rolled SVG of the four-cell index paths (May 2022 = 100)."""
+    W, H, L, T, R, B = 640, 340, 56, 30, 20, 40
+    series = {}
+    for cell in style:
+        c = cells.loc[cell]; idx = [100.0]
+        for g in (c.chg_22_23, c.chg_23_24, c.chg_24_25): idx.append(idx[-1] * (1 + g / 100))
+        series[cell] = idx
+    lo = min(min(v) for v in series.values()) - 1; hi = max(max(v) for v in series.values()) + 1
+    sx = lambda i: L + i / 3 * (W - L - R); sy = lambda v: T + (hi - v) / (hi - lo) * (H - T - B)
+    dash = {"-": "", "--": ' stroke-dasharray="7 3"', "-.": ' stroke-dasharray="12 3 2 3"', ":": ' stroke-dasharray="2 3"'}
+    o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" font-family="system-ui, sans-serif" font-size="11">']
+    for v in range(int(lo) + 1, int(hi) + 1, 2):
+        o.append(f'<line x1="{L}" y1="{sy(v):.1f}" x2="{W-R}" y2="{sy(v):.1f}" stroke="#e1e0d9" stroke-width="0.8"/><text x="{L-6}" y="{sy(v)+4:.1f}" text-anchor="end" fill="#898781">{v}</text>')
+    o.append(f'<line x1="{L}" y1="{sy(100):.1f}" x2="{W-R}" y2="{sy(100):.1f}" stroke="#c3c2b7"/>')
+    for i, lab in enumerate(["May 2022", "May 2023", "May 2024", "May 2025"]):
+        o.append(f'<text x="{sx(i):.0f}" y="{H-B+16}" text-anchor="middle" fill="#898781">{lab}</text>')
+    for k, (cell, (col, ls)) in enumerate(style.items()):
+        pts = " ".join(f"{sx(i):.1f},{sy(v):.1f}" for i, v in enumerate(series[cell]))
+        o.append(f'<polyline points="{pts}" fill="none" stroke="{col}" stroke-width="2"{dash[ls]}/>')
+        o += [f'<circle cx="{sx(i):.1f}" cy="{sy(v):.1f}" r="3" fill="{col}"/>' for i, v in enumerate(series[cell])]
+        y = T + 12 + k * 15
+        o.append(f'<line x1="{L+8}" y1="{y-4}" x2="{L+30}" y2="{y-4}" stroke="{col}" stroke-width="2"{dash[ls]}/><text x="{L+36}" y="{y}" fill="#52514e">{cell} ({cells.loc[cell, "workers_M"]:.0f}M)</text>')
+    o.append(f'<text x="14" y="{(T+H-B)/2:.0f}" text-anchor="middle" fill="#5f5e5a" transform="rotate(-90 14 {(T+H-B)/2:.0f})">Employment index, May 2022 = 100</text>')
+    o.append("</svg>")
+    (FIGURES / "fig_four_cells_by_year.svg").write_text("\n".join(o))
+
 if __name__ == "__main__":
     kw = pd.read_csv(DATA / "occupation_panel_2022_2025.csv")
     kw["RxP"] = kw.routine_R * kw.polanyi_P
@@ -135,5 +162,6 @@ if __name__ == "__main__":
         ax.plot(["May 2022", "May 2023", "May 2024", "May 2025"], idx, color=col, ls=ls, lw=2, marker="o", ms=4, label=f"{cell} ({c.workers_M:.0f}M)")
     ax.axhline(100, color="#c3c2b7", lw=0.8); ax.set_ylabel("Employment index, May 2022 = 100"); ax.legend(fontsize=8, frameon=False)
     for s in ["top", "right"]: ax.spines[s].set_visible(False)
-    ax.set_title("Same four cells, year by year (employment-weighted)", fontsize=11); plt.tight_layout(); plt.savefig(FIGURES / "fig_four_cells_by_year.svg"); plt.savefig(FIGURES / "fig_four_cells_by_year.png")
+    ax.set_title("Same four cells, year by year (employment-weighted)", fontsize=11); plt.tight_layout(); plt.savefig(FIGURES / "fig_four_cells_by_year.png")
+    write_cells_svg(cells, style)
     print("figures written")
