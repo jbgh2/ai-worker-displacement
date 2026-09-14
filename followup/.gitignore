@@ -1,0 +1,5 @@
+data/raw/
+data/oews_panel.csv
+figures/
+__pycache__/
+.pytest_cache/
