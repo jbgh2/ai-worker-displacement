@@ -1,0 +1,5 @@
+cell,n,workers_M,emp_change_22_25,chg_22_23,chg_23_24,chg_24_25,wage_change_22_25
+non-routine / embedded,64.0,21.3,6.61,4.23,2.31,-0.21,11.05
+non-routine / not embedded,45.0,5.69,5.73,3.66,0.35,1.6,9.97
+routine / embedded,45.0,6.81,8.39,2.62,2.69,2.48,10.29
+routine / not embedded,64.0,15.28,-2.61,-0.04,-1.56,-1.68,15.29
