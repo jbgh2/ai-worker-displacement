@@ -2,7 +2,7 @@
 
 An analysis of 894 US occupations measuring which jobs AI will displace, using a framework called Delegation Resistance built from O*NET Work Context data and validated against 4.4 million Indeed job postings.
 
-**[Read the blog post](https://jbgh2.github.io/ai-worker-displacement/)**
+**[Read the blog post](https://benhesketh.dev/ai-worker-displacement/)** · Follow-up: **[Routine Went First. Judgment Is Next.](https://benhesketh.dev/ai-worker-displacement/routine-went-first.html)** (September 2026), tested against 2025 BLS employment data; see [`followup/`](followup/)
 
 ## Repository Structure
 
